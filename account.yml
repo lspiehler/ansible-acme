@@ -1,0 +1,22 @@
+---
+  - hosts: all
+    become: true
+    vars:
+      keypath: /etc/ssl/private/account.key
+    tasks:
+      - name: Check if key exists
+        stat:
+          path: "{{keypath}}"
+        register: kp
+      - name:
+        command: "openssl genrsa -out {{keypath}} 2048"
+        when: not kp.stat.exists
+      - name: Make sure account exists and has given contacts. We agree to TOS.
+        community.crypto.acme_account:
+          account_key_src: "{{keypath}}"
+          acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory
+          acme_version: 2
+          state: present
+          terms_agreed: yes
+          contact:
+          - mailto:youremail@email.com
